@@ -28,7 +28,8 @@ async def main():
     mcp_client = MCPClient(
         server_params,
         debug=True,  # Enable debug logging
-        log_file=log_dir / "mcp_client.log"
+        log_file=log_dir / "mcp_client.log",
+        client_name="fs_client"
     )
     
     llm_client = GeminiAdapter(

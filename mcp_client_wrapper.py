@@ -8,9 +8,10 @@ class MCPClient:
     def __init__(self, 
                  server_params: StdioServerParameters, 
                  debug: bool = False,
-                 log_file: Optional[Path] = None):
+                 log_file: Optional[Path] = None,
+                 client_name: Optional[str] = "MCPClient"):
         self.server_params = server_params
-        self.logger = MCPLogger("MCPClient", debug_mode=debug, log_file=log_file)
+        self.logger = MCPLogger(client_name, debug_mode=debug, log_file=log_file)
 
     async def get_tools(self) -> List[Any]:
         self.logger.log_debug("Retrieving tools from MCP server")
