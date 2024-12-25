@@ -1,23 +1,21 @@
+from typing import Dict, List, Any
 import google.generativeai as genai
-from typing import Any, Dict, List
+import logging
 
-class GeminiAdapter():
+logger = logging.getLogger(__name__)
+
+class GeminiAdapter:
     def __init__(self, model_name: str = 'gemini-1.5-flash'):
         self.model_name = model_name
         self.model = None
         self.chat = None
-        self.tools = None
-
+        self._tools_by_client: Dict[str, List[Dict]] = {}
+        
     async def configure(self, api_key: str, **kwargs) -> None:
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name,
-            tools=self.tools
-        )
-        self.chat = self.model.start_chat()
-
-    async def prepare_tools(self, mcp_tools: List[Any]) -> Dict:
-        self.tools = [{"function_declarations": []}]
+        
+    async def prepare_tools(self, client_id: str, mcp_tools: List[Any]) -> Dict:
+        tools = [{"function_declarations": []}]
         
         for tool in mcp_tools:
             name, description, inputSchema = tool
@@ -49,11 +47,20 @@ class GeminiAdapter():
                         "required": inputSchema[1]["required"]
                     },
                 }
-            self.tools[0]["function_declarations"].append(tool_dict)
+            tools[0]["function_declarations"].append(tool_dict)
         
-        return self.tools
+        self._tools_by_client[client_id] = tools
+        return tools
 
-    async def send_message(self, message: str) -> Any:
+    async def send_message(self, client_id: str, message: str) -> Any:
+        if client_id not in self._tools_by_client:
+            raise ValueError(f"No tools registered for client {client_id}")
+            
+        self.model = genai.GenerativeModel(
+            model_name=self.model_name,
+            tools=self._tools_by_client[client_id]
+        )
+        self.chat = self.model.start_chat()
         return await self.chat.send_message_async(message)
 
     def extract_tool_call(self, response: Any) -> tuple[str, Dict[str, Any]]:
