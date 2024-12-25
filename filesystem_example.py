@@ -59,9 +59,13 @@ async def main():
         print("Directory contents:", result)
 
     except Exception as e:
-        # The error will be automatically logged by the respective components
         print(f"An error occurred: {str(e)}")
+        mcp_client.logger.end_session("failed")
+        llm_client.logger.end_session("failed")
         raise
+    else:
+        mcp_client.logger.end_session("completed")
+        llm_client.logger.end_session("completed")
 
 if __name__ == "__main__":
     asyncio.run(main())

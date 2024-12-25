@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 from pathlib import Path
+from datetime import datetime
 
 class MCPLogger:
     """Logger class for MCP Adapter SDK components"""
@@ -11,6 +12,7 @@ class MCPLogger:
                  log_file: Optional[Path] = None):
         self.logger = logging.getLogger(name)
         self.debug_mode = debug_mode
+        self.start_time = datetime.now()
         
         # Set base level based on debug mode
         base_level = logging.DEBUG if debug_mode else logging.INFO
@@ -38,6 +40,11 @@ class MCPLogger:
             file_handler.setFormatter(file_formatter)
             file_handler.setLevel(logging.DEBUG)  # Always log everything to file
             self.logger.addHandler(file_handler)
+            
+        # Log session start
+        self.log_info("=" * 50)
+        self.log_info(f"Session started at {self.start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        self.log_info("-" * 50)
     
     def log_debug(self, msg: str, *args, **kwargs):
         """Log debug message"""
@@ -54,3 +61,13 @@ class MCPLogger:
     def log_error(self, msg: str, *args, **kwargs):
         """Log error message"""
         self.logger.error(msg, *args, **kwargs)
+        
+    def end_session(self, status: str = "completed"):
+        """Log session end with duration"""
+        end_time = datetime.now()
+        duration = end_time - self.start_time
+        
+        self.log_info("-" * 50)
+        self.log_info(f"Session {status} at {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        self.log_info(f"Duration: {duration}")
+        self.log_info("=" * 50 + "\n")
