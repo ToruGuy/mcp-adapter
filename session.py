@@ -21,18 +21,30 @@ class MCPSession:
         self.session: Optional[ClientSession] = None
         self._streams: Optional[Tuple[Any, Any]] = None
         self._lock = Lock()
+        self._client_context = None
 
     async def establish_session(self) -> None:
         """Establishes a new session."""
+        print(31)
         if self.state == SessionState.CONNECTING:
             return
             
+        print(32)
         async with self._lock:
             try:
+                print(33)
                 self.state = SessionState.CONNECTING
-                self._streams = await stdio_client(self.server_params).__aenter__()
+                print(34)
+                self._client_context = stdio_client(self.server_params)
+                print(35)
+                self._streams = await self._client_context.__aenter__()
+                print(36)
                 self.session = ClientSession(*self._streams)
+                print(self.session)
+                print(37)
                 await self.session.initialize()
+                await self.session.initialize()
+                print(38)
                 self.state = SessionState.ACTIVE
             except Exception as e:
                 self.state = SessionState.ERROR
@@ -42,12 +54,15 @@ class MCPSession:
 
     async def ensure_session(self) -> ClientSession:
         """Ensures an active session exists and returns it."""
+        print(21)
         if self.state == SessionState.ACTIVE and self.session is not None:
             return self.session
 
+        print(22)
         if self.state in (SessionState.ERROR, SessionState.DISCONNECTED):
             await self.establish_session()
-            
+        
+        print(23)
         if self.session is None:
             raise RuntimeError("Failed to establish session")
             
@@ -55,12 +70,19 @@ class MCPSession:
 
     async def cleanup(self) -> None:
         """Cleans up session resources."""
-        if self._streams:
+        if self.session is not None:
             try:
-                await self._streams[0].aclose()
-                await self._streams[1].aclose()
+                await self.session.aclose()
             except:
                 pass
+            self.session = None
+
+        if self._client_context is not None:
+            try:
+                await self._client_context.__aexit__(None, None, None)
+            except:
+                pass
+            self._client_context = None
+
         self._streams = None
-        self.session = None
         self.state = SessionState.DISCONNECTED
