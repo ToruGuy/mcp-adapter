@@ -9,13 +9,13 @@ load_dotenv()
 
 async def main():
     # Setup parameters
-    desktop_path = "/Users/tako/Desktop"
+    desktop_path = "/home/marcin/Documents/GitHub/mcp-adapter"
     api_key = os.getenv('GEMINI_API_KEY')
     
     # Configure MCP server
     server_params = StdioServerParameters(
         command="npx",
-        args=["-y", "@modelcontextprotocol/server-filesystem", "/Users/tako/Desktop"],
+        args=["-y", "@modelcontextprotocol/server-filesystem", "/home/marcin/Documents/GitHub/mcp-adapter"],
         env=None
     )
 
@@ -27,6 +27,7 @@ async def main():
     tools = await mcp_client.get_tools()
     await llm_client.prepare_tools(tools)
     await llm_client.configure(api_key)
+
 
     # Example 1: Create a file
     response = await llm_client.send_message(f"Create a file called hello.txt 'Hello from MCP!' in path: {desktop_path}")

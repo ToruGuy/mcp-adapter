@@ -1,6 +1,8 @@
 import google.generativeai as genai
 from typing import Any, Dict, List
 
+from mcp_tools import MCPtools
+
 class GeminiAdapter():
     def __init__(self, model_name: str = 'gemini-1.5-flash'):
         self.model_name = model_name
@@ -16,10 +18,12 @@ class GeminiAdapter():
         )
         self.chat = self.model.start_chat()
 
-    async def prepare_tools(self, mcp_tools: List[Any]) -> Dict:
+    async def prepare_tools(self, mcp_tools: MCPtools) -> Dict:
         self.tools = [{"function_declarations": []}]
         
         for tool in mcp_tools:
+            print(tool)
+            print()
             name, description, inputSchema = tool
             function_type = inputSchema[1]["type"]
             properties = inputSchema[1]["properties"]
@@ -58,6 +62,7 @@ class GeminiAdapter():
 
     def extract_tool_call(self, response: Any) -> tuple[str, Dict[str, Any]]:
         tool = response.parts[0].function_call
+        #print(response.parts)
         tool_name = tool.name
         tool_args = {k: v for k, v in tool.args.items() if k != "_dummy"}
         return tool_name, tool_args

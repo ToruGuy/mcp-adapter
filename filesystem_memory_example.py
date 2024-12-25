@@ -4,12 +4,13 @@ from mcp import StdioServerParameters
 from gemini_adapter import GeminiAdapter
 from mcp_client_wrapper import MCPClient
 from dotenv import load_dotenv
+from mcp_tools import MCPtools
 
 load_dotenv()
 
 async def main():
     # Setup parameters
-    desktop_path = "/Users/tako/Desktop"
+    desktop_path = "/home/marcin/Documents/GitHub/mcp-adapter"
     api_key = os.getenv('GEMINI_API_KEY')
     
     # Configure the Filesystem MCP server
@@ -32,15 +33,16 @@ async def main():
 
     # Initialize our Gemini adapter (LLM client)
     llm_client = GeminiAdapter()
-    await llm_client.configure(api_key)
 
     # Collect tools from both servers and prepare them for the LLM
+    all_tools = MCPtools()
     fs_tools = await fs_client.get_tools()
     mem_tools = await mem_client.get_tools()
-    all_tools = fs_tools + mem_tools
-    tools_returned = await llm_client.prepare_tools(all_tools)
-
-    print(tools_returned)
+    all_tools.add(fs_tools)
+    all_tools.add(mem_tools)
+    
+    await llm_client.prepare_tools(all_tools.list_tools()) #first prepare tools
+    await llm_client.configure(api_key) #then initialize llm (without tools it will not work)
 
     # 1) Create a file in /Users/tako/Desktop
     print("\n=== Creating File ===")
@@ -68,7 +70,7 @@ async def main():
         "Create a new memory node named 'test-mcp-adapter-example' "
         "with the following metadata: {\n"
         f'  "path": "{os.path.join(desktop_path, "test-mcp-adapter-example.txt")}",\n'
-        f'  "content": "{file_content.strip()}"\n'
+        f'  "content": whatever \n'
         "}"
     )
     response = await llm_client.send_message(create_node_prompt)
