@@ -37,6 +37,7 @@ ENV/
 
 # Logs
 *.log
+logs/
 
 # Local development configuration
 config.local.py
