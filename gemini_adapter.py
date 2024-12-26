@@ -1,6 +1,8 @@
 import google.generativeai as genai
 from typing import Any, Dict, List, Optional
 from pathlib import Path
+
+import mcp
 from logger import MCPLogger
 
 from mcp_tools import MCPtools
@@ -30,43 +32,23 @@ class GeminiAdapter:
             self.logger.log_error(f"Failed to configure Gemini: {str(e)}")
             raise
 
-    async def prepare_tools(self, mcp_tools: List[Any]) -> Dict:
+    async def prepare_tools(self, mcp_tools: MCPtools) -> Dict:
+        mcp_tools = mcp_tools.list_tools()
         self.logger.log_debug(f"Preparing {len(mcp_tools)} tools for Gemini")
         self.tools = [{"function_declarations": []}]
-        
         try:
             for tool in mcp_tools:
-                name, description, inputSchema = tool
-                self.logger.log_debug(f"Converting tool: {name[1]}")
-                
-                function_type = inputSchema[1]["type"]
-                properties = inputSchema[1]["properties"]
-                
-                if properties == {}:
-                    tool_dict = {
-                        "name": name[1],
-                        "description": description[1],
-                        "parameters": {
-                            "type": 'Object',
-                            "properties": {
-                                "_dummy": {
-                                    "type": "string",
-                                    "description": "Unused parameter"
-                                }
-                            },
-                            "required": []
-                        },
-                    }
-                else:
-                    tool_dict = {
-                        "name": name[1],
-                        "description": description[1],
-                        "parameters": {
-                            "type": function_type,
-                            "properties": properties,
-                            "required": inputSchema[1]["required"]
-                        },
-                    }
+                self.logger.log_debug(f"Converting tool: {tool.name}")
+
+                tool_dict = {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": {
+                        "type": tool.function_type,
+                        "properties": tool.properties,
+                        "required": tool.required
+                    },
+                }
                 self.tools[0]["function_declarations"].append(tool_dict)
             
             self.logger.log_info(f"Successfully prepared {len(mcp_tools)} tools")

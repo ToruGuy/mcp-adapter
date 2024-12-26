@@ -41,7 +41,8 @@ async def main():
     all_tools.add(fs_tools)
     all_tools.add(mem_tools)
     
-    await llm_client.prepare_tools(all_tools.list_tools()) #first prepare tools
+    returned_tools = await llm_client.prepare_tools(all_tools) #first prepare tools
+    print(returned_tools)
     await llm_client.configure(api_key) #then initialize llm (without tools it will not work)
 
     # 1) Create a file in /Users/tako/Desktop
