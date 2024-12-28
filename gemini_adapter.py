@@ -68,14 +68,64 @@ class GeminiAdapter:
             self.logger.log_error(f"Failed to send message: {str(e)}")
             raise
 
+    def _extract_by_schema(self, value: Any, schema: Dict[str, Any]) -> Any:
+        """Extract value according to the schema definition"""
+        # Handle primitive types
+        if schema.get("type") == "string":
+            return str(value)
+        elif schema.get("type") == "number":
+            return float(value)
+        elif schema.get("type") == "integer":
+            return int(value)
+        elif schema.get("type") == "boolean":
+            return bool(value)
+            
+        # Handle arrays
+        elif schema.get("type") == "array":
+            items_schema = schema.get("items", {})
+            if hasattr(value, '__iter__'):
+                return [self._extract_by_schema(item, items_schema) for item in value]
+            return []
+            
+        # Handle objects
+        elif schema.get("type") == "object":
+            if hasattr(value, 'items'):
+                properties = schema.get("properties", {})
+                result = {}
+                items = dict(value.items())
+                
+                for prop_name, prop_schema in properties.items():
+                    if prop_name in items:
+                        result[prop_name] = self._extract_by_schema(items[prop_name], prop_schema)
+                        
+                return result
+            return {}
+            
+        # Default
+        return value
+
     def extract_tool_call(self, response: Any) -> tuple[str, Dict[str, Any]]:
-        self.logger.log_debug("Extracting tool call from response")
+        """
+        Extract tool call using the tool's schema definition.
+        """
         try:
-            tool = response.parts[0].function_call
-            tool_name = tool.name
-            tool_args = {k: v for k, v in tool.args.items() if k != "_dummy"}
-            self.logger.log_info(f"Extracted tool call: {tool_name}")
+            function_call = response.parts[0].function_call
+            tool_name = str(function_call.name)
+            
+            # Get the tool schema
+            tool = next((t for t in self.tools[0]["function_declarations"] 
+                        if t["name"] == tool_name), None)
+            
+            if not tool:
+                raise ValueError(f"Unknown tool: {tool_name}")
+                
+            # Extract according to schema
+            raw_args = function_call.args
+            tool_args = self._extract_by_schema(raw_args, tool["parameters"])
+            
+            self.logger.log_debug(f"Extracted arguments: {tool_args}")
             return tool_name, tool_args
+            
         except Exception as e:
             self.logger.log_error(f"Failed to extract tool call: {str(e)}")
             raise

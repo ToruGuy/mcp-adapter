@@ -15,7 +15,7 @@ async def main():
     log_dir.mkdir(exist_ok=True)
 
     # Setup parameters
-    desktop_path = "/home/marcin/Documents/GitHub/mcp-adapter"
+    desktop_path = os.getenv('DESKTOP_PATH')
     api_key = os.getenv('GEMINI_API_KEY')
     
     # Configure the Filesystem MCP server
@@ -81,20 +81,21 @@ async def main():
         read_file_prompt = f"Read the file test-mcp-adapter-example.txt from path: {desktop_path}"
         response = await llm_client.send_message(read_file_prompt)
         tool_name, tool_args = llm_client.extract_tool_call(response)
+        print("Tool name:", tool_name)
+        print("Tool args:", tool_args)
         file_content = await fs_client.execute_tool(tool_name, tool_args)
         print("File content:", file_content)
 
         # 3) Create a new "test-mcp-adapter-example" node in memory with text & path
         print("\n=== Creating Memory Node ===")
         create_node_prompt = (
-            "Create a new memory node named 'test-mcp-adapter-example' "
-            "with the following metadata: {\n"
-            f'  "path": "{os.path.join(desktop_path, "test-mcp-adapter-example.txt")}",\n'
-            f'  "content": whatever \n'
-            "}"
+            "Create a new memory node named 'test-mcp-adapter-example' and would remeber where the file is and what is about."
         )
         response = await llm_client.send_message(create_node_prompt)
+        print("Response:", response)
         tool_name, tool_args = llm_client.extract_tool_call(response)
+        print("Tool name:", tool_name)
+        print("Tool args:", tool_args)
         node_creation_result = await mem_client.execute_tool(tool_name, tool_args)
         print("Memory node creation result:", node_creation_result)
 
