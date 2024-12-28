@@ -61,7 +61,6 @@ async def main():
         all_tools.add(mem_tools)
         
         returned_tools = await llm_client.prepare_tools(all_tools) #first prepare tools
-        print(returned_tools)
         await llm_client.configure(api_key) #then initialize llm (without tools it will not work)
 
         # 1) Create a file in /Users/tako/Desktop
@@ -81,8 +80,6 @@ async def main():
         read_file_prompt = f"Read the file test-mcp-adapter-example.txt from path: {desktop_path}"
         response = await llm_client.send_message(read_file_prompt)
         tool_name, tool_args = llm_client.extract_tool_call(response)
-        print("Tool name:", tool_name)
-        print("Tool args:", tool_args)
         file_content = await fs_client.execute_tool(tool_name, tool_args)
         print("File content:", file_content)
 
@@ -92,10 +89,7 @@ async def main():
             "Create a new memory node named 'test-mcp-adapter-example' and would remeber where the file is and what is about."
         )
         response = await llm_client.send_message(create_node_prompt)
-        print("Response:", response)
         tool_name, tool_args = llm_client.extract_tool_call(response)
-        print("Tool name:", tool_name)
-        print("Tool args:", tool_args)
         node_creation_result = await mem_client.execute_tool(tool_name, tool_args)
         print("Memory node creation result:", node_creation_result)
 
