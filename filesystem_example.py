@@ -14,13 +14,13 @@ async def main():
     log_dir.mkdir(exist_ok=True)
     
     # Setup parameters
-    desktop_path = "/home/marcin/Documents/GitHub/mcp-adapter"
+    desktop_path = os.getenv('DESKTOP_PATH')
     api_key = os.getenv('GEMINI_API_KEY')
     
     # Configure MCP server
     server_params = StdioServerParameters(
         command="npx",
-        args=["-y", "@modelcontextprotocol/server-filesystem", "/home/marcin/Documents/GitHub/mcp-adapter"],
+        args=["-y", "@modelcontextprotocol/server-filesystem", desktop_path],
         env=None
     )
 
