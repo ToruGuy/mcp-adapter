@@ -1,4 +1,7 @@
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+from pathlib import Path
+
+from src.core.logger import MCPLogger
 
 class Tool:
     def __init__(self, name: str, 
@@ -14,8 +17,11 @@ class Tool:
 
 
 class MCPTools:
-    def __init__(self):
-        self.tools: Dict[str, Tool] = {}
+    def __init__(self, tools: Optional[List[Tool]] = None):
+        self.tools = tools or []
+    
+    def __len__(self) -> int:
+        return len(self.tools)
     
     def add(self, tools: List[Tuple[str, str, List[Dict[str, Any]]]]) -> None:
         for tool in tools:
@@ -40,18 +46,16 @@ class MCPTools:
                 properties=properties,
                 required=required
             )
-            self.tools[name] = new_tool
+            self.tools.append(new_tool)
     
     def get_tool(self, tool_name: str) -> Optional[Tool]:
-        return self.tools.get(tool_name)
+        for tool in self.tools:
+            if tool.name == tool_name:
+                return tool
+        return None
         
-    def get_desc(self, tool_name: str) -> Optional[str]:
-        tool = self.get_tool(tool_name)
-        return tool.description
-    
-    def list_tools(self) -> List[Tuple[str, Tool]]:
-        return list(self.tools.values())
+    def list_tools(self) -> List[Tool]:
+        return self.tools
         
     def remove_tool(self, tool_name: str):
-        self.tools.pop(tool_name, None) 
-
+        self.tools = [t for t in self.tools if t.name != tool_name]
