@@ -13,7 +13,7 @@ class Tool:
         self.required = required
 
 
-class MCPtools:
+class MCPTools:
     def __init__(self):
         self.tools: Dict[str, Tool] = {}
     

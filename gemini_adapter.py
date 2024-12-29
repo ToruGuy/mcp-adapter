@@ -5,7 +5,7 @@ from pathlib import Path
 import mcp
 from logger import MCPLogger
 
-from mcp_tools import MCPtools
+from mcp_tools import MCPTools
 
 class GeminiAdapter:
     def __init__(self, 
@@ -32,7 +32,7 @@ class GeminiAdapter:
             self.logger.log_error(f"Failed to configure Gemini: {str(e)}")
             raise
 
-    async def prepare_tools(self, mcp_tools: MCPtools) -> Dict:
+    async def prepare_tools(self, mcp_tools: MCPTools) -> Dict:
         mcp_tools = mcp_tools.list_tools()
         self.logger.log_debug(f"Preparing {len(mcp_tools)} tools for Gemini")
         self.tools = [{"function_declarations": []}]

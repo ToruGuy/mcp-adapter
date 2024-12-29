@@ -5,7 +5,7 @@ from mcp import StdioServerParameters
 from gemini_adapter import GeminiAdapter
 from mcp_client_wrapper import MCPClient
 from dotenv import load_dotenv
-from mcp_tools import MCPtools
+from mcp_tools import MCPTools
 
 load_dotenv()
 
@@ -54,7 +54,7 @@ async def main():
 
     try:
         # Collect tools from both servers and prepare them for the LLM
-        all_tools = MCPtools()
+        all_tools = MCPTools()
         fs_tools = await fs_client.get_tools()
         mem_tools = await mem_client.get_tools()
         all_tools.add(fs_tools)
