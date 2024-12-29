@@ -1,7 +1,11 @@
 import google.generativeai as genai
 from typing import Any, Dict, List, Optional
 from pathlib import Path
+
+import mcp
 from logger import MCPLogger
+
+from mcp_tools import MCPTools
 
 class GeminiAdapter:
     def __init__(self, 
@@ -28,43 +32,23 @@ class GeminiAdapter:
             self.logger.log_error(f"Failed to configure Gemini: {str(e)}")
             raise
 
-    async def prepare_tools(self, mcp_tools: List[Any]) -> Dict:
+    async def prepare_tools(self, mcp_tools: MCPTools) -> Dict:
+        mcp_tools = mcp_tools.list_tools()
         self.logger.log_debug(f"Preparing {len(mcp_tools)} tools for Gemini")
         self.tools = [{"function_declarations": []}]
-        
         try:
             for tool in mcp_tools:
-                name, description, inputSchema = tool
-                self.logger.log_debug(f"Converting tool: {name[1]}")
-                
-                function_type = inputSchema[1]["type"]
-                properties = inputSchema[1]["properties"]
-                
-                if properties == {}:
-                    tool_dict = {
-                        "name": name[1],
-                        "description": description[1],
-                        "parameters": {
-                            "type": 'Object',
-                            "properties": {
-                                "_dummy": {
-                                    "type": "string",
-                                    "description": "Unused parameter"
-                                }
-                            },
-                            "required": []
-                        },
-                    }
-                else:
-                    tool_dict = {
-                        "name": name[1],
-                        "description": description[1],
-                        "parameters": {
-                            "type": function_type,
-                            "properties": properties,
-                            "required": inputSchema[1]["required"]
-                        },
-                    }
+                self.logger.log_debug(f"Converting tool: {tool.name}")
+
+                tool_dict = {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": {
+                        "type": tool.function_type,
+                        "properties": tool.properties,
+                        "required": tool.required
+                    },
+                }
                 self.tools[0]["function_declarations"].append(tool_dict)
             
             self.logger.log_info(f"Successfully prepared {len(mcp_tools)} tools")
@@ -84,14 +68,64 @@ class GeminiAdapter:
             self.logger.log_error(f"Failed to send message: {str(e)}")
             raise
 
+    def _extract_by_schema(self, value: Any, schema: Dict[str, Any]) -> Any:
+        """Extract value according to the schema definition"""
+        # Handle primitive types
+        if schema.get("type") == "string":
+            return str(value)
+        elif schema.get("type") == "number":
+            return float(value)
+        elif schema.get("type") == "integer":
+            return int(value)
+        elif schema.get("type") == "boolean":
+            return bool(value)
+            
+        # Handle arrays
+        elif schema.get("type") == "array":
+            items_schema = schema.get("items", {})
+            if hasattr(value, '__iter__'):
+                return [self._extract_by_schema(item, items_schema) for item in value]
+            return []
+            
+        # Handle objects
+        elif schema.get("type") == "object":
+            if hasattr(value, 'items'):
+                properties = schema.get("properties", {})
+                result = {}
+                items = dict(value.items())
+                
+                for prop_name, prop_schema in properties.items():
+                    if prop_name in items:
+                        result[prop_name] = self._extract_by_schema(items[prop_name], prop_schema)
+                        
+                return result
+            return {}
+            
+        # Default
+        return value
+
     def extract_tool_call(self, response: Any) -> tuple[str, Dict[str, Any]]:
-        self.logger.log_debug("Extracting tool call from response")
+        """
+        Extract tool call using the tool's schema definition.
+        """
         try:
-            tool = response.parts[0].function_call
-            tool_name = tool.name
-            tool_args = {k: v for k, v in tool.args.items() if k != "_dummy"}
-            self.logger.log_info(f"Extracted tool call: {tool_name}")
+            function_call = response.parts[0].function_call
+            tool_name = str(function_call.name)
+            
+            # Get the tool schema
+            tool = next((t for t in self.tools[0]["function_declarations"] 
+                        if t["name"] == tool_name), None)
+            
+            if not tool:
+                raise ValueError(f"Unknown tool: {tool_name}")
+                
+            # Extract according to schema
+            raw_args = function_call.args
+            tool_args = self._extract_by_schema(raw_args, tool["parameters"])
+            
+            self.logger.log_debug(f"Extracted arguments: {tool_args}")
             return tool_name, tool_args
+            
         except Exception as e:
             self.logger.log_error(f"Failed to extract tool call: {str(e)}")
             raise
