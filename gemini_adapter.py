@@ -1,22 +1,18 @@
 import google.generativeai as genai
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
 
 import mcp
 from logger import MCPLogger
-
 from mcp_tools import MCPTools
+from base_adapter import BaseLLMAdapter
 
-class GeminiAdapter:
+class GeminiAdapter(BaseLLMAdapter):
     def __init__(self, 
                  model_name: str = 'gemini-1.5-flash',
                  debug: bool = False,
                  log_file: Optional[Path] = None):
-        self.model_name = model_name
-        self.model = None
-        self.chat = None
-        self.tools = None
-        self.logger = MCPLogger("GeminiAdapter", debug_mode=debug, log_file=log_file)
+        super().__init__(model_name, debug, log_file)
 
     async def configure(self, api_key: str, **kwargs) -> None:
         self.logger.log_debug(f"Configuring Gemini with model {self.model_name}")
@@ -67,42 +63,6 @@ class GeminiAdapter:
         except Exception as e:
             self.logger.log_error(f"Failed to send message: {str(e)}")
             raise
-
-    def _extract_by_schema(self, value: Any, schema: Dict[str, Any]) -> Any:
-        """Extract value according to the schema definition"""
-        # Handle primitive types
-        if schema.get("type") == "string":
-            return str(value)
-        elif schema.get("type") == "number":
-            return float(value)
-        elif schema.get("type") == "integer":
-            return int(value)
-        elif schema.get("type") == "boolean":
-            return bool(value)
-            
-        # Handle arrays
-        elif schema.get("type") == "array":
-            items_schema = schema.get("items", {})
-            if hasattr(value, '__iter__'):
-                return [self._extract_by_schema(item, items_schema) for item in value]
-            return []
-            
-        # Handle objects
-        elif schema.get("type") == "object":
-            if hasattr(value, 'items'):
-                properties = schema.get("properties", {})
-                result = {}
-                items = dict(value.items())
-                
-                for prop_name, prop_schema in properties.items():
-                    if prop_name in items:
-                        result[prop_name] = self._extract_by_schema(items[prop_name], prop_schema)
-                        
-                return result
-            return {}
-            
-        # Default
-        return value
 
     def extract_tool_call(self, response: Any) -> tuple[str, Dict[str, Any]]:
         """
