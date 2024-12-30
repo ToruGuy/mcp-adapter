@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from mcp import StdioServerParameters
-from src.llm import GeminiAdapter
+from src.llm import OpenAIAdapter
 from src.core import MCPClient, MCPTools
 from dotenv import load_dotenv
 
@@ -20,7 +20,7 @@ async def main():
     
     # Setup parameters
     desktop_path = os.getenv('DESKTOP_PATH')
-    api_key = os.getenv('GEMINI_API_KEY')
+    api_key = os.getenv('OPENAI_API_KEY')
     
     # Configure MCP server
     server_params = StdioServerParameters(
@@ -37,10 +37,10 @@ async def main():
         client_name="fs_client"
     )
     
-    llm_client = GeminiAdapter(
-        model_name='gemini-1.5-flash',
+    llm_client = OpenAIAdapter(
+        model_name='gpt-4o-mini',
         debug=True,  # Enable debug logging
-        log_file=log_dir / "gemini_adapter.log"
+        log_file=log_dir / "openai_adapter.log"
     )
 
     try:
