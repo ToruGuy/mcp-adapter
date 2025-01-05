@@ -35,12 +35,22 @@ class GeminiAdapter(BaseLLMAdapter):
             for tool in tools:
                 self.logger.log_debug(f"Converting tool: {tool.name}")
 
+                # Clean up properties to remove 'default' field
+                properties = {}
+                for key, value in tool.properties.items():
+                    if isinstance(value, dict) and 'default' in value:
+                        cleaned_value = value.copy()
+                        del cleaned_value['default']
+                        properties[key] = cleaned_value
+                    else:
+                        properties[key] = value
+
                 tool_dict = {
                     "name": tool.name,
                     "description": tool.description,
                     "parameters": {
                         "type": tool.function_type,
-                        "properties": tool.properties,
+                        "properties": properties,
                         "required": tool.required
                     },
                 }
