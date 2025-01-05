@@ -1,9 +1,14 @@
 import asyncio
 import os
+import sys
 from pathlib import Path
+
+# Add the project root to Python path
+sys.path.append(str(Path(__file__).parent.parent))
+
 from mcp import StdioServerParameters
-from gemini_adapter import GeminiAdapter
-from mcp_client_wrapper import MCPClient
+from src.llm import GeminiAdapter
+from src.core import MCPClient, MCPTools
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -40,7 +45,10 @@ async def main():
 
     try:
         # Setup the pipeline
-        tools = await mcp_client.get_tools()
+        raw_tools = await mcp_client.get_tools()
+        tools = MCPTools()
+        tools.add(raw_tools)
+        
         await llm_client.prepare_tools(tools)
         await llm_client.configure(api_key)
 

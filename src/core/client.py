@@ -2,7 +2,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from typing import Any, Dict, List, Optional
 from pathlib import Path
-from logger import MCPLogger
+from src.core.logger import MCPLogger
 
 class MCPClient:
     def __init__(self, 

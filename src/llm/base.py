@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
 
-from logger import MCPLogger
-from mcp_tools import MCPTools
+from src.core import MCPLogger, MCPTools
 
 class BaseLLMAdapter(ABC):
     """Base class for LLM adapters"""
@@ -24,7 +23,7 @@ class BaseLLMAdapter(ABC):
         pass
 
     @abstractmethod
-    async def prepare_tools(self, mcp_tools: MCPTools) -> Dict:
+    async def prepare_tools(self, mcp_tools: List[Any]) -> Dict:
         """Prepare tools for the LLM"""
         pass
 

@@ -1,11 +1,18 @@
 import asyncio
 import os
+import sys
 from pathlib import Path
+
+# Add the project root to Python path
+sys.path.append(str(Path(__file__).parent.parent))
+
 from mcp import StdioServerParameters
-from gemini_adapter import GeminiAdapter
-from mcp_client_wrapper import MCPClient
+from src.llm import GeminiAdapter
+from src.core import MCPClient, MCPTools
 from dotenv import load_dotenv
-from mcp_tools import MCPTools
+
+# Add the project root to Python path
+sys.path.append(str(Path(__file__).parent.parent))
 
 load_dotenv()
 
@@ -53,15 +60,18 @@ async def main():
     )
 
     try:
-        # Collect tools from both servers and prepare them for the LLM
-        all_tools = MCPTools()
+        # Get tools from both servers
         fs_tools = await fs_client.get_tools()
         mem_tools = await mem_client.get_tools()
-        all_tools.add(fs_tools)
-        all_tools.add(mem_tools)
         
-        returned_tools = await llm_client.prepare_tools(all_tools) #first prepare tools
-        await llm_client.configure(api_key) #then initialize llm (without tools it will not work)
+        # Create MCPTools instance and add tools
+        tools = MCPTools()
+        tools.add(fs_tools)
+        tools.add(mem_tools)
+
+        # Setup the pipeline
+        await llm_client.prepare_tools(tools)
+        await llm_client.configure(api_key)
 
         # 1) Create a file in /Users/tako/Desktop
         print("\n=== Creating File ===")
@@ -103,6 +113,14 @@ async def main():
     
     except Exception as e:
         print(f"An error occurred: {str(e)}")
+        fs_client.logger.end_session("failed")
+        mem_client.logger.end_session("failed")
+        llm_client.logger.end_session("failed")
+        raise
+    else:
+        fs_client.logger.end_session("completed")
+        mem_client.logger.end_session("completed")
+        llm_client.logger.end_session("completed")
 
 if __name__ == "__main__":
     asyncio.run(main())

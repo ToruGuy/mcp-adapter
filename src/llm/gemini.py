@@ -2,10 +2,8 @@ import google.generativeai as genai
 from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
 
-import mcp
-from logger import MCPLogger
-from mcp_tools import MCPTools
-from base_adapter import BaseLLMAdapter
+from src.core import MCPLogger, MCPTools
+from src.llm.base import BaseLLMAdapter
 
 class GeminiAdapter(BaseLLMAdapter):
     def __init__(self, 
@@ -29,11 +27,12 @@ class GeminiAdapter(BaseLLMAdapter):
             raise
 
     async def prepare_tools(self, mcp_tools: MCPTools) -> Dict:
-        mcp_tools = mcp_tools.list_tools()
-        self.logger.log_debug(f"Preparing {len(mcp_tools)} tools for Gemini")
+        """Prepare tools for Gemini model"""
+        tools = mcp_tools.list_tools()
+        self.logger.log_debug(f"Preparing {len(tools)} tools for Gemini")
         self.tools = [{"function_declarations": []}]
         try:
-            for tool in mcp_tools:
+            for tool in tools:
                 self.logger.log_debug(f"Converting tool: {tool.name}")
 
                 tool_dict = {
@@ -47,7 +46,7 @@ class GeminiAdapter(BaseLLMAdapter):
                 }
                 self.tools[0]["function_declarations"].append(tool_dict)
             
-            self.logger.log_info(f"Successfully prepared {len(mcp_tools)} tools")
+            self.logger.log_info(f"Successfully prepared {len(tools)} tools")
             return self.tools
             
         except Exception as e:
