@@ -36,16 +36,8 @@ class ToolOrchestrator:
         self._initialize_clients(server_params, debug)
 
     def _get_client_name(self, params: StdioServerParameters) -> str:
-        """Generate a descriptive client name from server parameters"""
-        # Extract server type from the package name
-        if "@modelcontextprotocol/server-filesystem" in params.args[1]:
-            return "filesystem"
-        elif "@modelcontextprotocol/server-memory" in params.args[1]:
-            return "memory"
-        else:
-            # Extract last part of the package name as fallback
-            package = params.args[1].split('/')[-1]
-            return package.replace('server-', '')
+        package = params.args[1].split('/')[-1]
+        return package.replace('server-', '')
 
     def _initialize_clients(self, 
                           server_params: List[StdioServerParameters],
