@@ -25,7 +25,7 @@ async def main():
     
     # Configure MCP servers
     server_params = [
-        # # Brave Search server
+        # Brave Search server
         StdioServerParameters(
             command="npx",
             args=["-y", "@modelcontextprotocol/server-brave-search"],
@@ -41,6 +41,12 @@ async def main():
         StdioServerParameters(
             command="npx",
             args=["-y", "@modelcontextprotocol/server-memory"],
+            env=None
+        ),
+        # SQLite Database server
+        StdioServerParameters(
+            command="npx",
+            args=["-y", "@modelcontextprotocol/server-sqlite", "--db-path", f"{desktop_path}/demo.db"],
             env=None
         )
     ]
@@ -63,6 +69,9 @@ async def main():
     # Setup the LLM pipeline
     await llm_client.prepare_tools(orchestrator.tools)
     await llm_client.configure(api_key)
+
+    # Create cleanup flag
+    cleanup_db = False
 
     try:
         # 1) Create a file
@@ -127,8 +136,49 @@ async def main():
         write_result = await orchestrator.execute(tool_name, tool_args)
         print(f"Write result (using {write_result.client_name}):", write_result.data)
 
+        # 5) Database operations example
+        print("\n=== Database Operations ===")
+        db_prompt = """
+        Use the SQLite tools to:
+        1. Create a 'products' table with columns: id INTEGER PRIMARY KEY, name TEXT, price REAL, stock INTEGER
+        2. Insert 3 sample products
+        3. List all products
+        4. Calculate average price
+        """
+        response = await llm_client.send_message(db_prompt)
+        tool_name, tool_args = llm_client.extract_tool_call(response)
+        
+        db_result = await orchestrator.execute(tool_name, tool_args)
+        print(f"Database operation result (using {db_result.client_name}):", db_result.data)
+        cleanup_db = True
+
+        # 6) Cleanup example
+        print("\n=== Cleanup ===")
+        cleanup_prompt = """
+        Use the SQLite tools to:
+        1. Drop the products table if exists
+        2. Delete test-orchestrator-example.txt
+        3. Remove memory node 'test-orchestrator'
+        """
+        response = await llm_client.send_message(cleanup_prompt)
+        tool_name, tool_args = llm_client.extract_tool_call(response)
+        
+        cleanup_result = await orchestrator.execute(tool_name, tool_args)
+        print(f"Cleanup result (using {cleanup_result.client_name}):", cleanup_result.data)
+
     finally:
         # Clean up
+        if cleanup_db:
+            print("\n=== Final Cleanup ===")
+            final_cleanup_prompt = """
+            Use the SQLite tools to:
+            1. Drop the products table if exists
+            """
+            response = await llm_client.send_message(final_cleanup_prompt)
+            tool_name, tool_args = llm_client.extract_tool_call(response)
+            
+            final_cleanup_result = await orchestrator.execute(tool_name, tool_args)
+            print(f"Final cleanup result (using {final_cleanup_result.client_name}):", final_cleanup_result.data)
         await orchestrator.close()
 
 if __name__ == "__main__":
