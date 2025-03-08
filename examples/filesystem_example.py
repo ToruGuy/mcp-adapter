@@ -1,19 +1,43 @@
+"""
+Filesystem Example
+
+This example demonstrates using the Filesystem MCP server with OpenAI:
+1. Creating a file on the desktop
+2. Listing the contents of a directory
+
+This showcases:
+- Integration with Filesystem MCP server
+- Basic file operations via MCP
+- Tool call validation
+"""
+
 import asyncio
 import os
 import sys
 from pathlib import Path
+from typing import Dict, Any, Optional
 
 # Add the project root to Python path
 sys.path.append(str(Path(__file__).parent.parent))
 
+# Third-party imports
+from dotenv import load_dotenv
 from mcp import StdioServerParameters
+
+# Local imports
 from src.llm import OpenAIAdapter
 from src.core import MCPClient, MCPTools
-from dotenv import load_dotenv
 
 load_dotenv()
 
-async def main():
+async def main() -> None:
+    """
+    Run the filesystem example.
+    
+    Demonstrates how to:
+    1. Create a file on the desktop
+    2. List directory contents
+    """
     # Setup logging directory
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
@@ -21,6 +45,10 @@ async def main():
     # Setup parameters
     desktop_path = os.getenv('DESKTOP_PATH')
     api_key = os.getenv('OPENAI_API_KEY')
+    
+    if not desktop_path or not api_key:
+        print("ERROR: Both DESKTOP_PATH and OPENAI_API_KEY must be set in .env file")
+        return
     
     # Configure MCP server
     server_params = StdioServerParameters(
@@ -33,7 +61,7 @@ async def main():
     mcp_client = MCPClient(
         server_params,
         debug=True,  # Enable debug logging
-        log_file=log_dir / "mcp_client.log",
+        log_file=log_dir / "filesystem_client.log",
         client_name="fs_client"
     )
     
@@ -53,27 +81,44 @@ async def main():
         await llm_client.configure(api_key)
 
         # Example 1: Create a file
-        message = f"Create a file called hello.txt 'Hello from MCP!' in path: {desktop_path}"
+        print("\n=== Creating File ===")
+        message = f"Create a file called hello.txt with content 'Hello from MCP!' in path: {desktop_path}"
         response = await llm_client.send_message(message)
         tool_name, tool_args = llm_client.extract_tool_call(response)
-        result = await mcp_client.execute_tool(tool_name, tool_args)
-        print("Create file result:", result)
+        
+        # Validate tool call
+        if tool_name and tool_args:
+            result = await mcp_client.execute_tool(tool_name, tool_args)
+            print("Create file result:", result)
+        else:
+            print("Failed to extract tool call for file creation")
+            return
 
         # Example 2: List directory
+        print("\n=== Listing Directory Contents ===")
         message = f"List the contents of {desktop_path}"
         response = await llm_client.send_message(message)
         tool_name, tool_args = llm_client.extract_tool_call(response)
-        result = await mcp_client.execute_tool(tool_name, tool_args)
-        print("Directory contents:", result)
+        
+        # Validate tool call
+        if tool_name and tool_args:
+            result = await mcp_client.execute_tool(tool_name, tool_args)
+            print("Directory contents:", result)
+        else:
+            print("Failed to extract tool call for directory listing")
 
+        # Log completion status
+        mcp_client.logger.end_session("completed")
+        llm_client.logger.end_session("completed")
+        
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         mcp_client.logger.end_session("failed")
         llm_client.logger.end_session("failed")
-        raise
-    else:
-        mcp_client.logger.end_session("completed")
-        llm_client.logger.end_session("completed")
+    finally:
+        # Always close clients
+        await mcp_client.close()
+        # No need to close LLM adapter as it doesn't maintain a persistent connection
 
 if __name__ == "__main__":
     asyncio.run(main())

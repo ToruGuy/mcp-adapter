@@ -52,9 +52,10 @@ async def main() -> None:
         return
     
     # Configure MCP Time server
+    # Note: Using mcp-server-time package name which is already installed
     time_params = StdioServerParameters(
         command="npx",
-        args=["-y", "@modelcontextprotocol/server-time"],
+        args=["-y", "mcp-server-time"],
         env=None
     )
 
