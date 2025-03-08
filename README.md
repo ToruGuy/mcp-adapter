@@ -244,6 +244,7 @@ The repository includes several example applications that demonstrate how to use
 1. **[Filesystem Example](examples/filesystem_example.py)**: Basic file read/write operations
 2. **[Time Example](examples/time_example.py)**: Working with timestamps and time-based calculations
 3. **[Research Assistant](examples/research_assistant.py)**: A complete application combining filesystem and memory servers
+4. **[Web Researcher](examples/web_researcher.py)**: Advanced research tool that searches the web, fetches content, and generates reports by combining Brave Search and Fetch servers
 
 ## Development and Testing
 
