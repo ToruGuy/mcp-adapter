@@ -132,6 +132,32 @@
    - Use session logging for tracking statuses
    - Ensure logs capture the right level of detail
 
+## Testing Best Practices
+
+1. **Comprehensive Testing Setup**:
+   - Create tests for each core component and LLM adapter
+   - Use the `unittest` framework's mock capabilities
+   - Test both success and error cases
+   - Cover edge cases like invalid input data
+
+2. **Mocking Async Functions**:
+   - Use `AsyncMock` for async functions
+   - Be careful with return values in async contexts
+   - Properly chain mocks for complex dependencies
+   - Use proper awaiting in test code
+
+3. **Testing Tool Orchestration**:
+   - Mock server parameters and clients
+   - Test the routing of tools to correct clients
+   - Verify tool validation works correctly
+   - Test error handling for invalid tools/args
+
+4. **Effective Coverage Reporting**:
+   - Create a test runner that generates reports
+   - Include date/time stamps in reports
+   - Track coverage percentage
+   - Aim for at least 80% code coverage
+
 ## What to Add to the Codebase Next
 
 1. **Additional Examples**:
@@ -139,10 +165,10 @@
    - Database operations with SQLite
    - Multi-server orchestration with more complex workflows
 
-2. **Testing Framework**:
-   - Add unit tests for core components
-   - Create integration tests for server interactions
-   - Add mocks for LLM responses
+2. **Enhance Testing**:
+   - Add integration tests for server interactions
+   - Increase test coverage of Gemini and OpenAI implementations
+   - Create end-to-end test examples
 
 3. **Enhanced Documentation**:
    - More detailed README with setup instructions
