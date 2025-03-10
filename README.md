@@ -1,9 +1,3 @@
-# MCP Adapter
-
-[![PyPI version](https://badge.fury.io/py/mcp-adapter.svg)](https://badge.fury.io/py/mcp-adapter)
-[![Python Versions](https://img.shields.io/pypi/pyversions/mcp-adapter.svg)](https://pypi.org/project/mcp-adapter/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 ## What is MCP Adapter?
 
 MCP Adapter is a Python package that bridges Large Language Models (LLMs) with the Model Context Protocol (MCP) ecosystem. It enables seamless integration between popular LLM providers (OpenAI, Gemini) and a variety of specialized MCP tools for file management, memory storage, APIs, and more.
@@ -91,7 +85,7 @@ pip install mcp-adapter
 ### Installing from source
 
 ```bash
-git clone https://github.com/yourusername/mcp-adapter.git
+git clone git@github.com:ToruGuy/mcp-adapter.git
 cd mcp-adapter
 pip install -e .
 ```
@@ -234,7 +228,6 @@ You can use MCP Adapter with a growing ecosystem of MCP servers:
 | PostgreSQL | `@modelcontextprotocol/server-postgres` | Database access |
 | Git | `@modelcontextprotocol/server-git` | Git repository operations |
 | GitHub | `@modelcontextprotocol/server-github` | GitHub API integration |
-| Puppeteer | `@modelcontextprotocol/server-puppeteer` | Web browsing automation |
 | Brave Search | `@modelcontextprotocol/server-brave-search` | Web search capabilities |
 
 ## Example Applications
