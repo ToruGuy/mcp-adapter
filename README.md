@@ -13,56 +13,6 @@ MCP Adapter is a Python package that bridges Large Language Models (LLMs) with t
 MCP Adapter is perfect for developers who want to build AI applications that can interact with the real world while maintaining a clean separation of concerns.
 
 ## Architecture
-
-```mermaid
-flowchart TB
-    subgraph LLMProviders["LLM Providers"]
-        OpenAI["OpenAI"]
-        Gemini["Gemini"]
-        Others["Others..."]
-    end
-
-    subgraph MCPAdapter["MCP Adapter Layer"]
-        subgraph LLMAdapters["LLM Adapters"]
-            OpenAIAdapter["OpenAI Adapter"]
-            GeminiAdapter["Gemini Adapter"]
-        end
-        
-        subgraph Orchestrator["Tool Orchestrator"]
-            Tools["MCP Tools Collection"]
-        end
-        
-        MCPClients["MCP Clients"]
-    end
-    
-    subgraph MCPServers["MCP Server Ecosystem"]
-        Filesystem["Filesystem Server"]
-        Memory["Memory Server"]
-        Time["Time Server"]
-        Other["Other MCP Servers..."]
-    end
-    
-    OpenAI --> OpenAIAdapter
-    Gemini --> GeminiAdapter
-    Others --> LLMAdapters
-    
-    LLMAdapters --> Tools
-    Tools --> MCPClients
-    
-    MCPClients --> Filesystem
-    MCPClients --> Memory
-    MCPClients --> Time
-    MCPClients --> Other
-    
-    classDef providers fill:#e6f2ff,stroke:#0066cc,stroke-width:2px
-    classDef adapter fill:#e6fff2,stroke:#009966,stroke-width:2px
-    classDef servers fill:#fff2e6,stroke:#cc6600,stroke-width:2px
-    
-    class LLMProviders,OpenAI,Gemini,Others providers
-    class MCPAdapter,LLMAdapters,OpenAIAdapter,GeminiAdapter,Orchestrator,Tools,MCPClients adapter
-    class MCPServers,Filesystem,Memory,Time,Other servers
-```
-
 The MCP Adapter architecture consists of three main components:
 
 1. **MCP Client**: Manages connections to individual MCP servers and executes tool calls
