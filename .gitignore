@@ -50,3 +50,7 @@ htmlcov/
 # Distribution
 *.tar.gz
 *.whl
+
+# Additional Docs
+add_docs
+claude_learnings
